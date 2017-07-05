@@ -90,7 +90,7 @@ class AuthenticatedClient(PublicClient):
             if "product" in data:
                 product = data["product"]
         r = self.session.delete(self.url + '/orders/',
-                            data=json.dumps({'product_id': product or self.product_id}), auth=self.auth)
+                            data=json.dumps({'product_id': product}), auth=self.auth)
         # r.raise_for_status()
         return r.json()
 
