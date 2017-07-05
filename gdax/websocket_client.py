@@ -6,19 +6,26 @@
 
 from __future__ import print_function
 import json
+import hmac
+import hashlib
+import time
+import base64
 
 from threading import Thread
 from websocket import create_connection, WebSocketConnectionClosedException
 
-
 class WebsocketClient(object):
-    def __init__(self, url="wss://ws-feed.gdax.com", products=None, message_type="subscribe"):
+    def __init__(self, url="wss://ws-feed.gdax.com", products=None, message_type="subscribe", 
+                 api_key=None, api_secret=None, passphrase=None):
         self.url = url
         self.products = products
         self.type = message_type
         self.stop = False
         self.ws = None
         self.thread = None
+        self.api_key = api_key
+        self.api_secret = api_secret
+        self.passphrase = passphrase
 
     def start(self):
         def _go():
@@ -43,10 +50,30 @@ class WebsocketClient(object):
 
         self.stop = False
         sub_params = {'type': 'subscribe', 'product_ids': self.products}
+
+        if self.api_key and self.api_secret and self.passphrase:
+            sig = self._sign_request('GET', '/users/self')
+            sub_params.update(sig)
+
         self.ws.send(json.dumps(sub_params))
         if self.type == "heartbeat":
             sub_params = {"type": "heartbeat", "on": True}
             self.ws.send(json.dumps(sub_params))
+
+    def _sign_request(self, method, path):
+        timestamp = str(time.time())
+        message = timestamp + method + path
+        message = message.encode('ascii')
+        hmac_key = base64.b64decode(self.api_secret)
+        signature = hmac.new(hmac_key, message, hashlib.sha256)
+        signature_b64 = base64.b64encode(signature.digest())
+        return {
+            'signature': signature_b64,
+            'timestamp': timestamp,
+            'key': self.api_key,
+            'passphrase': self.passphrase
+            }
+
 
     def _listen(self):
         while not self.stop:

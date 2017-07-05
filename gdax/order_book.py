@@ -13,8 +13,10 @@ from gdax.websocket_client import WebsocketClient
 
 
 class OrderBook(WebsocketClient):
-    def __init__(self, product_id='BTC-USD', log_to=None):
-        super(OrderBook, self).__init__(products=product_id)
+    def __init__(self, product_id='BTC-USD', log_to=None, api_key=None, 
+                 api_secret=None, passphrase=None):
+        super(OrderBook, self).__init__(products=product_id, api_key=api_key, 
+                                        api_secret=api_secret, passphrase=passphrase)
         self._asks = RBTree()
         self._bids = RBTree()
         self._client = PublicClient()
