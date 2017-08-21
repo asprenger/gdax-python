@@ -158,7 +158,12 @@ class OrderBook(WebsocketClient):
                 self.set_asks(price, asks)
 
     def change(self, order):
-        new_size = Decimal(order['new_size'])
+        
+        try:
+            new_size = Decimal(order['new_size'])
+        except KeyError:
+            return
+
         price = Decimal(order['price'])
 
         if order['side'] == 'buy':
